@@ -41,7 +41,18 @@ func (s *Suite) TestNode() {
 			InBld: []*model.BuilderInputSpec{b1},
 			Expected: []interface{}{
 				a1out,
-				p4outNamespace,
+				&model.Package{
+					Type: "conan",
+					Namespaces: []*model.PackageNamespace{{
+						Namespace: "openssl.org",
+						Names: []*model.PackageName{{
+							Name: "openssl",
+							Versions: []*model.PackageVersion{
+								{Version: "3.0.3", Qualifiers: []*model.PackageQualifier{}},
+							},
+						}},
+					}},
+				},
 				s1outNamespace,
 				b1out,
 			},
@@ -74,10 +85,10 @@ func (s *Suite) TestNode() {
 			}
 
 			for _, inP := range test.InPkg {
-				if p, err := b.IngestPackage(ctx, *inP); err != nil {
+				if id, err := b.IngestPackageID(ctx, *inP); err != nil {
 					s.T().Fatalf("Could not ingest package: %v", err)
 				} else {
-					ids = append(ids, p.ID)
+					ids = append(ids, id)
 				}
 			}
 
@@ -115,9 +126,11 @@ func (s *Suite) TestNodes() {
 	v, err := be.IngestArtifactID(s.Ctx, a1)
 	s.Require().NoError(err)
 
-	p, err := be.IngestPackage(s.Ctx, *p4)
+	id, err := be.IngestPackageID(s.Ctx, *p4)
 	s.Require().NoError(err)
-
+	pkgs, err := be.Packages(s.Ctx, &model.PkgSpec{ID: &id})
+	s.Require().NoError(err)
+	p := pkgs[0]
 	nodes, err := be.Nodes(s.Ctx, []string{v, p.ID, p.Namespaces[0].Names[0].Versions[0].ID})
 	s.Require().NoError(err)
 	if diff := cmp.Diff(a1out, nodes[0], ignoreID, ignoreEmptySlices); diff != "" {
