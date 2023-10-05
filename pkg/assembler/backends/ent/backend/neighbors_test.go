@@ -41,19 +41,8 @@ func (s *Suite) TestNode() {
 			InBld: []*model.BuilderInputSpec{b1},
 			Expected: []interface{}{
 				a1out,
-				&model.Package{
-					Type: "conan",
-					Namespaces: []*model.PackageNamespace{{
-						Namespace: "openssl.org",
-						Names: []*model.PackageName{{
-							Name: "openssl",
-							Versions: []*model.PackageVersion{
-								{Version: "3.0.3", Qualifiers: []*model.PackageQualifier{}},
-							},
-						}},
-					}},
-				},
-				s1outNamespace,
+				p4out,
+				s1out,
 				b1out,
 			},
 		},
@@ -111,10 +100,8 @@ func (s *Suite) TestNode() {
 			for i, id := range ids {
 				n, err := b.Node(s.Ctx, id)
 				s.Require().NoError(err)
-				if n != nil {
-					if diff := cmp.Diff(test.Expected[i], n, ignoreID, ignoreEmptySlices); diff != "" {
-						s.T().Errorf("Unexpected results. (-want +got):\n%s", diff)
-					}
+				if diff := cmp.Diff(test.Expected[i], n, ignoreID, ignoreEmptySlices); diff != "" {
+					s.T().Errorf("Unexpected results. (-want +got):\n%s", diff)
 				}
 			}
 		})
